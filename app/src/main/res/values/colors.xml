@@ -3,4 +3,9 @@
     <color name="colorPrimary">#B91D44</color>
     <color name="colorPrimaryDark">#B91D44</color>
     <color name="colorAccent">#FF4081</color>
+    <color name="airline_name">#515151</color>
+    <color name="lbl_price">#787878</color>
+    <color name="departure">#dd000000</color>
+    <color name="tint_arrow">#6E6E6E</color>
+    <color name="duration">#dd595959</color>
 </resources>

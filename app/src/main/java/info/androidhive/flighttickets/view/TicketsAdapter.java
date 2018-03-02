@@ -15,6 +15,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.github.ybq.android.spinkit.SpinKitView;
 
 import java.util.List;
 
@@ -54,6 +55,8 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.MyViewHo
         @BindView(R.id.price)
         TextView price;
 
+        @BindView(R.id.loader)
+        SpinKitView loader;
 
         public MyViewHolder(View view) {
             super(view);
@@ -97,7 +100,8 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.MyViewHo
         holder.departure.setText(ticket.getDeparture() + " Dep");
         holder.arrival.setText(ticket.getArrival() + " Dest");
 
-        holder.duration.setText(ticket.getDuration());
+        holder.duration.setText(ticket.getFlightNumber());
+        holder.duration.append(", " + ticket.getDuration());
         holder.stops.setText(ticket.getNumberOfStops() + " Stops");
 
         if (!TextUtils.isEmpty(ticket.getInstructions())) {
@@ -105,8 +109,11 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.MyViewHo
         }
 
         if (ticket.getPrice() != null) {
-            holder.price.setText("₹" + ticket.getPrice().getPrice());
+            holder.price.setText("₹" + String.format("%.0f", ticket.getPrice().getPrice()));
             holder.seats.setText(ticket.getPrice().getSeats() + " Seats");
+            holder.loader.setVisibility(View.INVISIBLE);
+        } else {
+            holder.loader.setVisibility(View.VISIBLE);
         }
     }
 

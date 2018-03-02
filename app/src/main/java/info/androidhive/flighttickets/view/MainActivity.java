@@ -1,8 +1,11 @@
 package info.androidhive.flighttickets.view;
 
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.graphics.Rect;
 import android.os.Bundle;
+import android.support.design.widget.CoordinatorLayout;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -10,9 +13,10 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,14 +31,11 @@ import info.androidhive.flighttickets.network.model.Price;
 import info.androidhive.flighttickets.network.model.Ticket;
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
-import io.reactivex.Single;
-import io.reactivex.SingleObserver;
-import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
+import io.reactivex.observables.ConnectableObservable;
+import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements TicketsAdapter.TicketsAdapterListener {
@@ -53,6 +54,9 @@ public class MainActivity extends AppCompatActivity implements TicketsAdapter.Ti
     @BindView(R.id.recycler_view)
     RecyclerView recyclerView;
 
+    @BindView(R.id.coordinator_layout)
+    CoordinatorLayout coordinatorLayout;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,84 +72,120 @@ public class MainActivity extends AppCompatActivity implements TicketsAdapter.Ti
 
         RecyclerView.LayoutManager mLayoutManager = new GridLayoutManager(this, 1);
         recyclerView.setLayoutManager(mLayoutManager);
-        recyclerView.addItemDecoration(new GridSpacingItemDecoration(1, dpToPx(5), true));
+        recyclerView.addItemDecoration(new MainActivity.GridSpacingItemDecoration(1, dpToPx(5), true));
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
 
-        Single<List<Ticket>> ticketsObservable = getTickets(from, to);
+        ConnectableObservable<List<Ticket>> ticketsObservable = getTickets(from, to).replay();
 
-        ticketsObservable
-                .subscribeWith(new SingleObserver<List<Ticket>>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
+        /**
+         * Fetching all tickets first
+         * Observable emits List<Ticket> at once
+         * All the items will be added to RecyclerView
+         * */
+        disposable.add(
+                ticketsObservable
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribeWith(new DisposableObserver<List<Ticket>>() {
 
-                    }
+                            @Override
+                            public void onNext(List<Ticket> tickets) {
+                                // Refreshing list
+                                ticketsList.clear();
+                                ticketsList.addAll(tickets);
+                                mAdapter.notifyDataSetChanged();
+                            }
 
-                    @Override
-                    public void onSuccess(List<Ticket> tickets) {
-                        ticketsList.clear();
-                        ticketsList.addAll(tickets);
-                        mAdapter.notifyDataSetChanged();
-                    }
+                            @Override
+                            public void onError(Throwable e) {
+                                showError(e);
+                            }
 
-                    @Override
-                    public void onError(Throwable e) {
+                            @Override
+                            public void onComplete() {
 
-                    }
-                });
+                            }
+                        }));
 
-        ticketsObservable
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .flatMapObservable(new Function<List<Ticket>, ObservableSource<Ticket>>() {
-                    @Override
-                    public ObservableSource<Ticket> apply(List<Ticket> tickets) throws Exception {
-                        return Observable.fromIterable(tickets);
-                    }
-                })
-                .flatMap(new Function<Ticket, ObservableSource<Ticket>>() {
-                    @Override
-                    public ObservableSource<Ticket> apply(Ticket ticket) throws Exception {
-                        return getPriceObservable(ticket);
-                    }
-                })
-                .subscribe(new Observer<Ticket>() {
-                    @Override
-                    public void onSubscribe(Disposable d) {
+        /**
+         * Fetching individual ticket price
+         * First FlatMap converts single List<Ticket> to multiple emissions
+         * Second FlatMap makes HTTP call on each Ticket emission
+         * */
+        disposable.add(
+                ticketsObservable
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        /**
+                         * Converting List<Ticket> emission to single Ticket emissions
+                         * */
+                        .flatMap(new Function<List<Ticket>, ObservableSource<Ticket>>() {
+                            @Override
+                            public ObservableSource<Ticket> apply(List<Ticket> tickets) throws Exception {
+                                return Observable.fromIterable(tickets);
+                            }
+                        })
+                        /**
+                         * Fetching price on each Ticket emission
+                         * */
+                        .flatMap(new Function<Ticket, ObservableSource<Ticket>>() {
+                            @Override
+                            public ObservableSource<Ticket> apply(Ticket ticket) throws Exception {
+                                return getPriceObservable(ticket);
+                            }
+                        })
+                        .subscribeWith(new DisposableObserver<Ticket>() {
 
-                    }
+                            @Override
+                            public void onNext(Ticket ticket) {
+                                int position = ticketsList.indexOf(ticket);
 
-                    @Override
-                    public void onNext(Ticket ticket) {
-                        Log.e(TAG, "onNext: " + ticketsList.indexOf(ticket) + ", " + ticket.getPrice().getFlightNumber() + ", " + ticket.getPrice().getFlightNumber() + ", " + ticket.getPrice().getPrice());
-                        ticketsList.indexOf(ticket);
-                    }
+                                if (position == -1) {
+                                    // TODO - take action
+                                    // Ticket not found in the list
+                                    // This shouldn't happen
+                                    return;
+                                }
 
-                    @Override
-                    public void onError(Throwable e) {
+                                ticketsList.set(position, ticket);
+                                mAdapter.notifyItemChanged(position);
+                            }
 
-                    }
+                            @Override
+                            public void onError(Throwable e) {
+                                showError(e);
+                            }
 
-                    @Override
-                    public void onComplete() {
+                            @Override
+                            public void onComplete() {
 
-                    }
-                });
+                            }
+                        }));
+
+        // Calling connect to start emission
+        ticketsObservable.connect();
     }
 
-    private Single<List<Ticket>> getTickets(String from, String to) {
+    /**
+     * Making Retrofit call to fetch all tickets
+     */
+    private Observable<List<Ticket>> getTickets(String from, String to) {
         return apiService.searchTickets(from, to)
+                .toObservable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
-    private Observable<Ticket> getTicketsObservable() {
-        return Observable.fromIterable(ticketsList);
-    }
-
+    /**
+     * Making Retrofit call to get single ticket price
+     * get price HTTP call returns Price object, but
+     * map() operator is used to change the return type to Ticket
+     */
     private Observable<Ticket> getPriceObservable(final Ticket ticket) {
         return apiService
                 .getPrice(ticket.getFlightNumber(), ticket.getFrom(), ticket.getTo())
+                .toObservable()
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .map(new Function<Price, Ticket>() {
@@ -220,14 +260,28 @@ public class MainActivity extends AppCompatActivity implements TicketsAdapter.Ti
     }
 
     @Override
+    public void onTicketSelected(Ticket contact) {
+
+    }
+
+    /**
+     * Snackbar shows observer error
+     */
+    private void showError(Throwable e) {
+        Log.e(TAG, "showError: " + e.getMessage());
+
+        Snackbar snackbar = Snackbar
+                .make(coordinatorLayout, e.getMessage(), Snackbar.LENGTH_LONG);
+        View sbView = snackbar.getView();
+        TextView textView = sbView.findViewById(android.support.design.R.id.snackbar_text);
+        textView.setTextColor(Color.YELLOW);
+        snackbar.show();
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         disposable.dispose();
         unbinder.unbind();
-    }
-
-    @Override
-    public void onTicketSelected(Ticket contact) {
-
     }
 }

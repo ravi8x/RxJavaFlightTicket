@@ -1,7 +1,5 @@
 package info.androidhive.flighttickets.network.model;
 
-import android.util.Log;
-
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -81,8 +79,6 @@ public class Ticket {
         if (!(obj instanceof Ticket)) {
             return false;
         }
-
-        Log.e("XXX", flightNumber + " =  " + ((Ticket) obj).getFlightNumber());
 
         return flightNumber.equalsIgnoreCase(((Ticket) obj).getFlightNumber());
     }

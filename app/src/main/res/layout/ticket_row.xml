@@ -34,10 +34,10 @@
 
                     <ImageView
                         android:id="@+id/logo"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="@dimen/logo_width"
+                        android:layout_height="@dimen/logo_width"
                         android:layout_gravity="center_vertical"
-                        android:layout_marginRight="10dp" />
+                        android:layout_marginRight="@dimen/dimen_10" />
 
                     <TextView
                         android:id="@+id/airline_name"
@@ -47,9 +47,8 @@
                         android:fontFamily="sans-serif-medium"
                         android:gravity="center_vertical"
                         android:maxLines="1"
-                        android:text="Air Asia"
-                        android:textColor="#515151"
-                        android:textSize="16sp"
+                        android:textColor="@color/airline_name"
+                        android:textSize="@dimen/airline_name"
                         android:textStyle="normal" />
                 </LinearLayout>
 
@@ -61,8 +60,8 @@
                     android:fontFamily="sans-serif"
                     android:gravity="center"
                     android:letterSpacing="0.02"
-                    android:textColor="#b91d44"
-                    android:textSize="14sp"
+                    android:textColor="@color/colorPrimary"
+                    android:textSize="@dimen/no_of_stops"
                     android:textStyle="normal" />
 
                 <TextView
@@ -73,8 +72,8 @@
                     android:gravity="right"
                     android:letterSpacing="0.02"
                     android:text="@string/lbl_price"
-                    android:textColor="#787878"
-                    android:textSize="14sp"
+                    android:textColor="@color/lbl_price"
+                    android:textSize="@dimen/lbl_price"
                     android:textStyle="normal" />
 
             </LinearLayout>
@@ -95,8 +94,8 @@
                     android:fontFamily="sans-serif-medium"
                     android:gravity="left"
                     android:maxLines="1"
-                    android:textColor="#dd000000"
-                    android:textSize="20sp"
+                    android:textColor="@color/departure"
+                    android:textSize="@dimen/departure"
                     android:textStyle="normal" />
 
                 <ImageView
@@ -105,7 +104,7 @@
                     android:layout_gravity="center_vertical"
                     android:paddingRight="8dp"
                     android:src="@drawable/ic_arrow_forward_black_24dp"
-                    android:tint="#6E6E6E" />
+                    android:tint="@color/tint_arrow" />
 
                 <TextView
                     android:id="@+id/arrival"
@@ -116,31 +115,30 @@
                     android:fontFamily="sans-serif-medium"
                     android:gravity="left"
                     android:maxLines="1"
-                    android:text="18:30 Dest"
-                    android:textColor="#dd000000"
-                    android:textSize="20sp"
+                    android:textColor="@color/departure"
+                    android:textSize="@dimen/departure"
                     android:textStyle="normal" />
 
                 <RelativeLayout
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_weight="1"
                     android:gravity="right"
-                    android:paddingRight="@dimen/activity_padding">
+                    android:layout_height="match_parent"
+                    android:layout_weight="1">
 
                     <TextView
                         android:id="@+id/price"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textColor="#dd000000"
-                        android:textSize="16sp" />
+                        android:fontFamily="sans-serif-medium"
+                        android:layout_centerVertical="true"
+                        android:textColor="@color/departure"
+                        android:textSize="@dimen/price" />
 
                     <com.github.ybq.android.spinkit.SpinKitView xmlns:app="http://schemas.android.com/apk/res-auto"
-                        android:id="@+id/spin_kit"
+                        android:id="@+id/loader"
                         style="@style/SpinKitView.Large.Wave"
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
-                        android:layout_alignParentRight="true"
+                        android:layout_width="@dimen/logo_width"
+                        android:layout_height="@dimen/logo_width"
                         android:layout_centerVertical="true"
                         android:layout_gravity="right"
                         app:SpinKit_Color="@color/colorAccent" />
@@ -160,8 +158,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
                     android:fontFamily="sans-serif"
-                    android:textColor="#dd595959"
-                    android:textSize="11sp"
+                    android:textColor="@color/duration"
+                    android:textSize="@dimen/duration"
                     android:textStyle="normal" />
 
                 <TextView
@@ -171,9 +169,8 @@
                     android:layout_weight="1"
                     android:fontFamily="sans-serif"
                     android:gravity="right"
-                    android:text="4 seats"
-                    android:textColor="#dd595959"
-                    android:textSize="11sp"
+                    android:textColor="@color/duration"
+                    android:textSize="@dimen/duration"
                     android:textStyle="normal" />
             </LinearLayout>
 
