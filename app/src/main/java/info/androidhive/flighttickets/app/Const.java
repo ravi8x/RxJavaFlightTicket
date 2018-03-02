@@ -7,5 +7,5 @@ package info.androidhive.flighttickets.app;
 public class Const {
     // https://api.androidhive.info/json/airline-tickets.php
     // https://api.androidhive.info/json/airline-tickets-price.php
-    public static final String BASE_URL = "";
+    public static final String BASE_URL = "https://api.androidhive.info/json/";
 }
