@@ -98,6 +98,7 @@ public class TicketsAdapter extends RecyclerView.Adapter<TicketsAdapter.MyViewHo
         holder.arrival.setText(ticket.getArrival() + " Dest");
 
         holder.duration.setText(ticket.getDuration());
+        holder.stops.setText(ticket.getNumberOfStops() + " Stops");
 
         if (!TextUtils.isEmpty(ticket.getInstructions())) {
             holder.duration.append(", " + ticket.getInstructions());

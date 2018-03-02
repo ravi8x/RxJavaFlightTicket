@@ -3,13 +3,9 @@ package info.androidhive.flighttickets.view;
 import android.content.res.Resources;
 import android.graphics.Rect;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.GridLayoutManager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -27,10 +23,18 @@ import butterknife.Unbinder;
 import info.androidhive.flighttickets.R;
 import info.androidhive.flighttickets.network.ApiClient;
 import info.androidhive.flighttickets.network.ApiService;
+import info.androidhive.flighttickets.network.model.Price;
 import info.androidhive.flighttickets.network.model.Ticket;
+import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
+import io.reactivex.Single;
+import io.reactivex.SingleObserver;
+import io.reactivex.SingleSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.observers.DisposableSingleObserver;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 
 public class MainActivity extends AppCompatActivity implements TicketsAdapter.TicketsAdapterListener {
@@ -68,30 +72,89 @@ public class MainActivity extends AppCompatActivity implements TicketsAdapter.Ti
         recyclerView.setItemAnimator(new DefaultItemAnimator());
         recyclerView.setAdapter(mAdapter);
 
-        searchTickets(from, to);
+        Single<List<Ticket>> ticketsObservable = getTickets(from, to);
+
+        ticketsObservable
+                .subscribeWith(new SingleObserver<List<Ticket>>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onSuccess(List<Ticket> tickets) {
+                        ticketsList.clear();
+                        ticketsList.addAll(tickets);
+                        mAdapter.notifyDataSetChanged();
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+                });
+
+        ticketsObservable
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .flatMapObservable(new Function<List<Ticket>, ObservableSource<Ticket>>() {
+                    @Override
+                    public ObservableSource<Ticket> apply(List<Ticket> tickets) throws Exception {
+                        return Observable.fromIterable(tickets);
+                    }
+                })
+                .flatMap(new Function<Ticket, ObservableSource<Ticket>>() {
+                    @Override
+                    public ObservableSource<Ticket> apply(Ticket ticket) throws Exception {
+                        return getPriceObservable(ticket);
+                    }
+                })
+                .subscribe(new Observer<Ticket>() {
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Ticket ticket) {
+                        Log.e(TAG, "onNext: " + ticketsList.indexOf(ticket) + ", " + ticket.getPrice().getFlightNumber() + ", " + ticket.getPrice().getFlightNumber() + ", " + ticket.getPrice().getPrice());
+                        ticketsList.indexOf(ticket);
+                    }
+
+                    @Override
+                    public void onError(Throwable e) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
     }
 
-    private void searchTickets(String from, String to) {
-        disposable.add(
-                apiService
-                        .searchTickets(from, to)
-                        .subscribeOn(Schedulers.io())
-                        .observeOn(AndroidSchedulers.mainThread())
-                        .subscribeWith(new DisposableSingleObserver<List<Ticket>>() {
-                            @Override
-                            public void onSuccess(List<Ticket> tickets) {
-                                ticketsList.clear();
-                                ticketsList.addAll(tickets);
-                                mAdapter.notifyDataSetChanged();
-                            }
+    private Single<List<Ticket>> getTickets(String from, String to) {
+        return apiService.searchTickets(from, to)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread());
+    }
 
-                            @Override
-                            public void onError(Throwable e) {
-                                // TODO - show snackbar
-                                Log.e(TAG, "onError: " + e.getMessage());
-                            }
-                        }));
+    private Observable<Ticket> getTicketsObservable() {
+        return Observable.fromIterable(ticketsList);
+    }
 
+    private Observable<Ticket> getPriceObservable(final Ticket ticket) {
+        return apiService
+                .getPrice(ticket.getFlightNumber(), ticket.getFrom(), ticket.getTo())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(new Function<Price, Ticket>() {
+                    @Override
+                    public Ticket apply(Price price) throws Exception {
+                        ticket.setPrice(price);
+                        return ticket;
+                    }
+                });
     }
 
     @Override

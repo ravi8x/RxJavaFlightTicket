@@ -1,5 +1,7 @@
 package info.androidhive.flighttickets.network.model;
 
+import android.util.Log;
+
 import com.google.gson.annotations.SerializedName;
 
 /**
@@ -68,5 +70,27 @@ public class Ticket {
 
     public void setPrice(Price price) {
         this.price = price;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == this) {
+            return true;
+        }
+
+        if (!(obj instanceof Ticket)) {
+            return false;
+        }
+
+        Log.e("XXX", flightNumber + " =  " + ((Ticket) obj).getFlightNumber());
+
+        return flightNumber.equalsIgnoreCase(((Ticket) obj).getFlightNumber());
+    }
+
+    @Override
+    public int hashCode() {
+        int hash = 3;
+        hash = 53 * hash + (this.flightNumber != null ? this.flightNumber.hashCode() : 0);
+        return hash;
     }
 }

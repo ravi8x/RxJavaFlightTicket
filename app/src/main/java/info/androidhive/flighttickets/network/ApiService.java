@@ -8,6 +8,7 @@ import java.util.List;
 
 import info.androidhive.flighttickets.network.model.Price;
 import info.androidhive.flighttickets.network.model.Ticket;
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
@@ -18,5 +19,5 @@ public interface ApiService {
     Single<List<Ticket>> searchTickets(@Query("from") String from, @Query("to") String to);
 
     @GET("airline-tickets-price.php")
-    Single<List<Price>> getPrice(@Query("flight_number") String flightNumber, @Query("from") String from, @Query("to") String to);
+    Observable<Price> getPrice(@Query("flight_number") String flightNumber, @Query("from") String from, @Query("to") String to);
 }
