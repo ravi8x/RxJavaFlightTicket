@@ -8,9 +8,7 @@ import java.util.List;
 
 import info.androidhive.flighttickets.network.model.Price;
 import info.androidhive.flighttickets.network.model.Ticket;
-import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.observables.ConnectableObservable;
 import retrofit2.http.GET;
 import retrofit2.http.Query;
 

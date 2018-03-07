@@ -65,6 +65,8 @@ public class MainActivity extends AppCompatActivity implements TicketsAdapter.Ti
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        getSupportActionBar().setTitle(from + " > " + to);
 
         apiService = ApiClient.getClient().create(ApiService.class);
 
